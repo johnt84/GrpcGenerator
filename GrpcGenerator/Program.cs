@@ -10,7 +10,7 @@ namespace GrpcGenerator
     {
         static async Task Main(string[] args)
         {
-            // This is a demo of the GrpcWizard library, which generates a complete gRCP
+            // This is a demo of the GrpcWizard library, which generates a complete gRPC
             // infrastructure from a service and an interface. Each method in the service 
             // must define an input type and return a Task of an output type. 
 
