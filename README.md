@@ -1,6 +1,6 @@
 # GrpcGenerator
 
-GrpcGenerator is a .NET Core 5 console app that demonstrates the **GrpcWizard** library, which generates a complete gRCP infrastructure from a service and an interface. Each method in the service must define an input type and return a Task of an output type. 
+GrpcGenerator is a .NET Core 5 console app that demonstrates the **GrpcWizard** library, which generates a complete gRPC infrastructure from a service and an interface. Each method in the service must define an input type and return a Task of an output type. 
 
 You will end up with a client-side service that you uses .NET types.
 Conversion to and from gRPC message types is done automatically.
@@ -28,7 +28,7 @@ public class Person
 }
 ```
 
-Before you can generate the gRCP code, you need an interface with at least one method that accepts a custom type and returns a custom type. You can not use primitive types like string or Int32. If you need to pass those, create a class around them.
+Before you can generate the gRPC code, you need an interface with at least one method that accepts a custom type and returns a custom type. You can not use primitive types like string or Int32. If you need to pass those, create a class around them.
 
 Let's create some simple classes we can use to send and return data. We're going to add these to a Models folder in the Shared project:
 
