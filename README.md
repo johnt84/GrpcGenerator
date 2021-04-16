@@ -1,8 +1,9 @@
 # GrpcGenerator
 
-GrpcGenerator is a .NET Core 5 console app that demonstrates the **GrpcWizard** library, which generates a complete gRPC infrastructure from a service and an interface. Each method in the service must define an input type and return a Task of an output type. 
+GrpcGenerator is a .NET Core 5 console app that demonstrates the **GrpcWizard** library, which generates a complete gRPC infrastructure for a hosted Blazor WebAssembly application from a simple service and an interface. Each method in the service must define an input type and return a Task of an output type. 
 
 You will end up with a client-side service that you uses .NET types.
+
 Conversion to and from gRPC message types is done automatically.
 
 The wizard will generate:
@@ -10,8 +11,8 @@ The wizard will generate:
 - a proto file
 - converter class files to convert gRPC message types to .NET types and vice-versa
 - a gRPC server-side service that calls into your existing service 
-- a client-side service that calls the gRPC service, converting types automatically.
-- a README.txt file that has snippets to add to existing files in all three projects.
+- a client-side service that calls the gRPC service, converting types automatically
+- a README.txt file that has snippets to add to existing files in all three projects
 
 ## Example:
 
@@ -64,9 +65,9 @@ public interface IPeopleService
 }
 ```
 
-Notice that the interface is decorated with the `[GrpcService]` attribute. That's so the GrpcWizard can tell which members of the service are relevant.
+Notice that the interface is decorated with the `[GrpcService]` attribute. That's so the **GrpcWizard** can tell which members of the service are relevant.
 
-Here's a simple implementation of `IPeopleService` for the sake of demonstration. Note that the service must ALSO be decorated with the `[GrpcService]` attribute.
+Next, we create an implementation of `IPeopleService`. Note that the service must ALSO be decorated with the `[GrpcService]` attribute.
 
 ```c#
 [GrpcService]
@@ -83,6 +84,7 @@ public class PeopleService : IPeopleService
 	    people.Add(new Person { Id = 3, FirstName = "Amanda", 
                                LastName = "Reckonwith" });
 	}
+    
 	public Task<PeopleReply> GetAll(GetAllPeopleRequest request)
 	{
 	    var reply = new PeopleReply();
@@ -106,7 +108,7 @@ public class PeopleService : IPeopleService
 Now you are ready to generate! Here's what the GrpcGenerator console app does:
 
 ```c#
-// This service and it's interface must be decorated with 
+// This service and its interface must be decorated with 
 // the [GrpcService] attribute
 var ServiceType = typeof(PeopleService);
 
@@ -136,9 +138,9 @@ Console.WriteLine();
 Console.WriteLine(result);
 ```
 
-In the output folder you will see a README.txt file with snippets to put into your existing files: .csproj files, Startup.cs, Program.cs, etc.
+In the Output folder you will see a README.txt file with snippets to put into your existing files: .csproj files, Startup.cs, Program.cs, etc.
 
-You'll also see a *Client* subfolder, a *Server* subfolder, and a *Shared* subfolder with generated files that you must copy into those projects.
+You'll also see a *Client* subfolder, a *Server* subfolder, and a *Shared* subfolder containing generated files that you must copy into those projects.
 
 ## Demo Output:
 
@@ -239,6 +241,8 @@ Client Project:
 
 ### Shared\people.proto
 
+This is the proto file that gRPC uses to define the interface to the gRPC service.
+
 ```c#
 syntax = "proto3";
 option csharp_namespace = "BlazorGrpcGenerated.Shared.Models";
@@ -269,6 +273,8 @@ message Grpc_Person {
 ```
 
 ### Server\Grpc_PeopleService.cs
+
+This is an implementation of the gRPC service in the Server project. Note that it calls into your existing PeopleService to access the data.
 
 ```c#
 using Grpc.Core;
@@ -312,6 +318,8 @@ namespace BlazorGrpcGenerated.Shared.Models
 
 ### Client\GrpcPeopleClient.cs
 
+This file is used in the Client application to access the gRPC service. Note that it accepts and returns your .NET object types. It converts those .NET types to gRPC types before calling the service, and also converts the return values back to .NET.
+
 ```c#
 using BlazorGrpcGenerated.Shared.Models;
 using System;
@@ -343,6 +351,10 @@ public class GrpcPeopleClient
 
 }
 ```
+
+## Converters
+
+These converters are generated as well. They convert between .NET types and gRPC message types. You can use them yourself if you like. The Client service uses them so that your code can work with .NET types. My tests have shown little to no overhead added by the conversion process.
 
 ### Shared\GetAllPeopleRequestConverter.cs
 
