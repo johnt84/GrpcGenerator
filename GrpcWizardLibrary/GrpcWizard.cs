@@ -429,43 +429,57 @@ namespace GrpcWizardLibrary
             var readmeSb = new StringBuilder();
             readmeSb.AppendLine("Instructions for modifying your Blazor WebAssembly app to support gRPC");
             readmeSb.AppendLine();
-            readmeSb.AppendLine($"1) Add the {ProtoFileName} file to the Shared project.");
-            readmeSb.AppendLine("2) Add the following converter files to the Shared project:");
+
+            readmeSb.AppendLine("Shared Project:");
+            readmeSb.AppendLine("===============");
+            readmeSb.AppendLine("1) Add the following to the Shared project .csproj file:");
+            readmeSb.AppendLine();
+            readmeSb.Append(sharedSb);
+            readmeSb.AppendLine();
+            readmeSb.AppendLine($"2) Add the {ProtoFileName} file to the Shared project.");
+            readmeSb.AppendLine("3) Add the following converter files to the Shared project:");
             readmeSb.AppendLine();
             foreach (var filename in converterFiles)
             {
                 readmeSb.AppendLine($"   {filename}");
             }
             readmeSb.AppendLine();
-            readmeSb.AppendLine($"3) Add the Grpc_{ServiceName}Service.cs file to the Shared project.");
-            readmeSb.AppendLine($"4) Add the Grpc{ServiceName}Client.cs file to the Client project.");
-            readmeSb.AppendLine("5) Add the following to the Shared project .csproj file:");
-            readmeSb.AppendLine("");
-            readmeSb.Append(sharedSb);
-            readmeSb.AppendLine("");
-            readmeSb.AppendLine("6) Add the following to the Server project .csproj file:");
-            readmeSb.AppendLine("");
+            readmeSb.AppendLine();
+
+            readmeSb.AppendLine("Server Project:");
+            readmeSb.AppendLine("===============");
+            readmeSb.AppendLine("1) Add the following to the Server project .csproj file:");
+            readmeSb.AppendLine();
             readmeSb.Append(serverSb);
             readmeSb.AppendLine("");
-            readmeSb.AppendLine("7) Add the following to the Client project .csproj file:");
-            readmeSb.AppendLine("");
-            readmeSb.Append(clientSb);
-            readmeSb.AppendLine("");
-            readmeSb.AppendLine("8) Add the following to the Client project Program.cs file:");
-            readmeSb.AppendLine("");
-            readmeSb.Append(programSb);
-            readmeSb.AppendLine("");
-            readmeSb.AppendLine("9) Add the following to the Server project Startup.cs file:");
-            readmeSb.AppendLine("");
+            readmeSb.AppendLine($"2) Add the Grpc_{ServiceName}Service.cs file to the Server project.");
+            readmeSb.AppendLine();
+            readmeSb.AppendLine("3) Add the following to the Server project Startup.cs file:");
+            readmeSb.AppendLine();
             readmeSb.Append(startupSb);
-            readmeSb.AppendLine("");
-            readmeSb.AppendLine("10) Add the following @using statement to the Client project _Imports.razor file.");
-            readmeSb.AppendLine("     @using BlazorGrpcGenerated.Shared.Models");
-            readmeSb.AppendLine("11) Add the following to the top of any .razor file to access data:");
-            readmeSb.AppendLine($"    @inject Grpc{ServiceName}Client {ServiceName}Client");
-            readmeSb.AppendLine("");
+            readmeSb.AppendLine();
+            readmeSb.AppendLine();
 
-            string readmeFileName = $"{OutputFolder}\\README.TXT";
+            readmeSb.AppendLine("Client Project:");
+            readmeSb.AppendLine("===============");
+            readmeSb.AppendLine("1) Add the following to the Client project .csproj file:");
+            readmeSb.AppendLine();
+            readmeSb.Append(clientSb);
+            readmeSb.AppendLine();
+            readmeSb.AppendLine($"2) Add the Grpc{ServiceName}Client.cs file to the Client project.");
+            readmeSb.AppendLine();
+            readmeSb.AppendLine("3) Add the following to the Client project Program.cs file:");
+            readmeSb.AppendLine();
+            readmeSb.Append(programSb);
+            readmeSb.AppendLine();
+            readmeSb.AppendLine("4) Add the following @using statement to the Client project _Imports.razor file:");
+            readmeSb.AppendLine($"     @using {ModelsNameSpace}");
+            readmeSb.AppendLine();
+            readmeSb.AppendLine("5) Add the following to the top of any .razor file to access data:");
+            readmeSb.AppendLine($"    @inject Grpc{ServiceName}Client {ServiceName}Client");
+            readmeSb.AppendLine();
+
+            string readmeFileName = $"{OutputFolder}\\README.txt";
             File.WriteAllText(readmeFileName, readmeSb.ToString());
 
             string protoFileName = $"{SharedOutputFolder}\\{ProtoFileName}";
