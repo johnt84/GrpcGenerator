@@ -36,21 +36,21 @@ Let's create some simple classes we can use to send and return data. We're going
 ```c#
 public class GetAllPeopleRequest
 {
-	// If you want to pass nothing, you still have to wrap a class around it.
+    // If you want to pass nothing, you still have to wrap a class around it.
 }
 ```
 
 ```c#
 public class PeopleReply
 {
-	public List<Person> People { get; set; } = new List<Person>();
+    public List<Person> People { get; set; } = new List<Person>();
 }
 ```
 
 ```c#
 public class GetPersonByIdRequest
 {
-	public int Id { get; set; }
+    public int Id { get; set; }
 }
 ```
 
@@ -60,8 +60,8 @@ Now we can create a service interface in the Server project:
 [GrpcService]
 public interface IPeopleService
 {
-	Task<PeopleReply> GetAll(GetAllPeopleRequest request);
-	Task<Person> GetPersonById(GetPersonByIdRequest request);
+    Task<PeopleReply> GetAll(GetAllPeopleRequest request);
+    Task<Person> GetPersonById(GetPersonByIdRequest request);
 }
 ```
 
@@ -73,35 +73,35 @@ Next, we create an implementation of `IPeopleService`. Note that the service mus
 [GrpcService]
 public class PeopleService : IPeopleService
 {
-	private List<Person> people = new List<Person>();
+    private List<Person> people = new List<Person>();
 
-	public PeopleService()
-	{
-	    people.Add(new Person { Id = 1, FirstName = "Isadora", 
+    public PeopleService()
+    {
+        people.Add(new Person { Id = 1, FirstName = "Isadora", 
                                LastName = "Jarr" });
-	    people.Add(new Person { Id = 2, FirstName = "Ben", 
+        people.Add(new Person { Id = 2, FirstName = "Ben", 
                                LastName = "Drinkin" });
-	    people.Add(new Person { Id = 3, FirstName = "Amanda", 
+        people.Add(new Person { Id = 3, FirstName = "Amanda", 
                                LastName = "Reckonwith" });
 	}
     
-	public Task<PeopleReply> GetAll(GetAllPeopleRequest request)
-	{
-	    var reply = new PeopleReply();
-	    // add the entire set to reply.People
-	    reply.People.AddRange(people);
-	    return Task.FromResult(reply);
-	}
+    public Task<PeopleReply> GetAll(GetAllPeopleRequest request)
+    {
+        var reply = new PeopleReply();
+        // add the entire set to reply.People
+        reply.People.AddRange(people);
+        return Task.FromResult(reply);
+    }
 
-	public Task<Person> GetPersonById(GetPersonByIdRequest request)
-	{
-	    // find the person by request.Id and return
-	    var result = (from x in people
-			  where x.Id == request.Id
-			  select x).FirstOrDefault();
+    public Task<Person> GetPersonById(GetPersonByIdRequest request)
+    {
+        // find the person by request.Id and return
+        var result = (from x in people
+              where x.Id == request.Id
+              select x).FirstOrDefault();
 
-	    return Task.FromResult(result);
-	}
+        return Task.FromResult(result);
+    }
 }
 ```
 
