@@ -136,9 +136,102 @@ Console.WriteLine();
 Console.WriteLine(result);
 ```
 
-
-
 In the output folder you will see a README.txt file with snippets to put into your existing files: .csproj files, Startup.cs, Program.cs, etc.
 
 You'll also see a *Client* subfolder, a *Server* subfolder, and a *Shared* subfolder with generated files that you must copy into those projects.
+
+## README.txt demo output
+
+```
+Instructions for modifying your Blazor WebAssembly app to support gRPC
+
+Shared Project:
+===============
+1) Add the following to the Shared project .csproj file:
+
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.15.8" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.36.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.37.0" >
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+        <Protobuf Include="people.proto" />
+    </ItemGroup>
+
+2) Add the people.proto file to the Shared project.
+
+3) Add the following converter files to the Shared project:
+
+   GetAllPeopleRequestConverter.cs
+   PeopleReplyConverter.cs
+   GetPersonByIdRequestConverter.cs
+   PersonConverter.cs
+
+
+Server Project:
+===============
+1) Add the following to the Server project .csproj file:
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.36.0" />
+        <PackageReference Include="Grpc.AspNetCore.Web" Version="2.36.0" />
+    </ItemGroup>
+
+2) Add the Grpc_PeopleService.cs file to the Server project.
+
+3) Add the following to the Server project Startup.cs file:
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddGrpc();
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        app.UseGrpcWeb(); // goes after app.UseRouting()
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapGrpcService<Grpc_PeopleService>().EnableGrpcWeb();
+        });
+    }
+
+
+Client Project:
+===============
+1) Add the following to the Client project .csproj file:
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.Net.Client.Web" Version="2.36.0" />
+    </ItemGroup>
+
+2) Add the GrpcPeopleClient.cs file to the Client project.
+
+3) Add the following to the Client project Program.cs file:
+
+    using BlazorGrpcGenerated.Shared.Models;
+    using Grpc.Net.Client;
+    using Grpc.Net.Client.Web;
+
+    public static async Task Main(string[] args)
+    {
+        builder.Services.AddSingleton(services =>
+        {
+            var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));
+            var baseUri = builder.HostEnvironment.BaseAddress;
+            var channel = GrpcChannel.ForAddress(baseUri, new GrpcChannelOptions { HttpClient = httpClient });
+            return new Grpc_People.Grpc_PeopleClient(channel);
+        });
+        builder.Services.AddScoped<GrpcPeopleClient>();
+    }
+
+4) Add the following @using statement to the Client project _Imports.razor file:
+     @using BlazorGrpcGenerated.Shared.Models
+
+5) Add the following to the top of any .razor file to access data:
+    @inject GrpcPeopleClient PeopleClient
+```
 
