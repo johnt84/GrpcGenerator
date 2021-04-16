@@ -83,7 +83,7 @@ public class PeopleService : IPeopleService
                                LastName = "Drinkin" });
         people.Add(new Person { Id = 3, FirstName = "Amanda", 
                                LastName = "Reckonwith" });
-	}
+    }
     
     public Task<PeopleReply> GetAll(GetAllPeopleRequest request)
     {
