@@ -140,7 +140,9 @@ In the output folder you will see a README.txt file with snippets to put into yo
 
 You'll also see a *Client* subfolder, a *Server* subfolder, and a *Shared* subfolder with generated files that you must copy into those projects.
 
-## README.txt demo output
+## Demo Output:
+
+### README.txt
 
 ```
 Instructions for modifying your Blazor WebAssembly app to support gRPC
@@ -233,5 +235,328 @@ Client Project:
 
 5) Add the following to the top of any .razor file to access data:
     @inject GrpcPeopleClient PeopleClient
+```
+
+### Shared\people.proto
+
+```c#
+syntax = "proto3";
+option csharp_namespace = "BlazorGrpcGenerated.Shared.Models";
+
+service Grpc_People {
+    rpc GetAll (Grpc_GetAllPeopleRequest) returns (Grpc_PeopleReply);
+    rpc GetPersonById (Grpc_GetPersonByIdRequest) returns (Grpc_Person);
+}
+
+message Grpc_GetAllPeopleRequest {
+}
+
+message Grpc_PeopleReply {
+    repeated Grpc_Person people = 1;
+}
+
+message Grpc_GetPersonByIdRequest {
+    int32 id = 1;
+}
+
+message Grpc_Person {
+    int32 id = 1;
+    string firstName = 2;
+    string lastName = 3;
+    string bio = 4;
+    string photoUrl = 5;
+}
+```
+
+### Server\Grpc_PeopleService.cs
+
+```c#
+using Grpc.Core;
+using Google.Protobuf.WellKnownTypes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using GrpcGenerator;
+
+namespace BlazorGrpcGenerated.Shared.Models
+{
+    public class Grpc_PeopleService : Grpc_People.Grpc_PeopleBase
+    {
+        PeopleService peopleService;
+
+        public Grpc_PeopleService(PeopleService _peopleService)
+        {
+            peopleService = _peopleService;
+        }
+
+        public override async Task<Grpc_PeopleReply> GetAll(Grpc_GetAllPeopleRequest request, ServerCallContext context)
+        {
+            var baseRequest = GetAllPeopleRequestConverter.FromGrpc_GetAllPeopleRequest(request);
+            var baseResponse = await peopleService.GetAll(baseRequest);
+            var response = PeopleReplyConverter.FromPeopleReply(baseResponse);
+            return response;
+        }
+
+        public override async Task<Grpc_Person> GetPersonById(Grpc_GetPersonByIdRequest request, ServerCallContext context)
+        {
+            var baseRequest = GetPersonByIdRequestConverter.FromGrpc_GetPersonByIdRequest(request);
+            var baseResponse = await peopleService.GetPersonById(baseRequest);
+            var response = PersonConverter.FromPerson(baseResponse);
+            return response;
+        }
+
+    }
+}
+```
+
+### Client\GrpcPeopleClient.cs
+
+```c#
+using BlazorGrpcGenerated.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+public class GrpcPeopleClient
+{
+    Grpc_People.Grpc_PeopleClient grpc_PeopleClient;
+    public GrpcPeopleClient(Grpc_People.Grpc_PeopleClient _grpc_PeopleClient)
+    {
+        grpc_PeopleClient = _grpc_PeopleClient;
+    }
+
+    public async Task<PeopleReply> GetAllAsync(GetAllPeopleRequest request)
+    {
+        var getAllPeopleRequest = GetAllPeopleRequestConverter.FromGetAllPeopleRequest(request);
+        var peopleReply = await grpc_PeopleClient.GetAllAsync(getAllPeopleRequest);
+        return PeopleReplyConverter.FromGrpc_PeopleReply(peopleReply);
+    }
+
+    public async Task<Person> GetPersonByIdAsync(GetPersonByIdRequest request)
+    {
+        var getPersonByIdRequest = GetPersonByIdRequestConverter.FromGetPersonByIdRequest(request);
+        var person = await grpc_PeopleClient.GetPersonByIdAsync(getPersonByIdRequest);
+        return PersonConverter.FromGrpc_Person(person);
+    }
+
+}
+```
+
+### Shared\GetAllPeopleRequestConverter.cs
+
+```c#
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BlazorGrpcGenerated.Shared.Models;
+
+namespace BlazorGrpcGenerated.Shared.Models
+{
+    public static class GetAllPeopleRequestConverter
+    {
+        public static List<Grpc_GetAllPeopleRequest> FromGetAllPeopleRequestList(List<GetAllPeopleRequest> list)
+        {
+            var result = new List<Grpc_GetAllPeopleRequest>();
+            foreach (var item in list)
+            {
+                result.Add(FromGetAllPeopleRequest(item));
+            }
+            return result;
+        }
+
+        public static List<GetAllPeopleRequest> FromGrpc_GetAllPeopleRequestList(List<Grpc_GetAllPeopleRequest> list)
+        {
+            var result = new List<GetAllPeopleRequest>();
+            foreach (var item in list)
+            {
+                result.Add(FromGrpc_GetAllPeopleRequest(item));
+            }
+            return result;
+        }
+
+        public static Grpc_GetAllPeopleRequest FromGetAllPeopleRequest(GetAllPeopleRequest item)
+        {
+            var result = new Grpc_GetAllPeopleRequest();
+            return result;
+        }
+
+
+        public static GetAllPeopleRequest FromGrpc_GetAllPeopleRequest(Grpc_GetAllPeopleRequest item)
+        {
+            var result = new GetAllPeopleRequest();
+            return result;
+        }
+
+    }
+}
+```
+
+### Shared\GetPersonByIdRequestConverter.cs
+
+```c#
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BlazorGrpcGenerated.Shared.Models;
+
+namespace BlazorGrpcGenerated.Shared.Models
+{
+    public static class GetPersonByIdRequestConverter
+    {
+        public static List<Grpc_GetPersonByIdRequest> FromGetPersonByIdRequestList(List<GetPersonByIdRequest> list)
+        {
+            var result = new List<Grpc_GetPersonByIdRequest>();
+            foreach (var item in list)
+            {
+                result.Add(FromGetPersonByIdRequest(item));
+            }
+            return result;
+        }
+
+        public static List<GetPersonByIdRequest> FromGrpc_GetPersonByIdRequestList(List<Grpc_GetPersonByIdRequest> list)
+        {
+            var result = new List<GetPersonByIdRequest>();
+            foreach (var item in list)
+            {
+                result.Add(FromGrpc_GetPersonByIdRequest(item));
+            }
+            return result;
+        }
+
+        public static Grpc_GetPersonByIdRequest FromGetPersonByIdRequest(GetPersonByIdRequest item)
+        {
+            var result = new Grpc_GetPersonByIdRequest();
+            result.Id = item.Id;
+            return result;
+        }
+
+
+        public static GetPersonByIdRequest FromGrpc_GetPersonByIdRequest(Grpc_GetPersonByIdRequest item)
+        {
+            var result = new GetPersonByIdRequest();
+            result.Id = item.Id;
+            return result;
+        }
+
+    }
+}
+```
+
+### Shared\PeopleReplyConverter.cs
+
+```c#
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BlazorGrpcGenerated.Shared.Models;
+
+namespace BlazorGrpcGenerated.Shared.Models
+{
+    public static class PeopleReplyConverter
+    {
+        public static List<Grpc_PeopleReply> FromPeopleReplyList(List<PeopleReply> list)
+        {
+            var result = new List<Grpc_PeopleReply>();
+            foreach (var item in list)
+            {
+                result.Add(FromPeopleReply(item));
+            }
+            return result;
+        }
+
+        public static List<PeopleReply> FromGrpc_PeopleReplyList(List<Grpc_PeopleReply> list)
+        {
+            var result = new List<PeopleReply>();
+            foreach (var item in list)
+            {
+                result.Add(FromGrpc_PeopleReply(item));
+            }
+            return result;
+        }
+
+        public static Grpc_PeopleReply FromPeopleReply(PeopleReply item)
+        {
+            var result = new Grpc_PeopleReply();
+            var people = PersonConverter.FromPersonList(item.People.ToList());
+            result.People.AddRange(people);
+            return result;
+        }
+
+
+        public static PeopleReply FromGrpc_PeopleReply(Grpc_PeopleReply item)
+        {
+            var result = new PeopleReply();
+            var people = PersonConverter.FromGrpc_PersonList(item.People.ToList());
+            result.People.AddRange(people);
+            return result;
+        }
+
+    }
+}
+```
+
+### Shared\PersonConverter.cs
+
+```c#
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BlazorGrpcGenerated.Shared.Models;
+
+namespace BlazorGrpcGenerated.Shared.Models
+{
+    public static class PersonConverter
+    {
+        public static List<Grpc_Person> FromPersonList(List<Person> list)
+        {
+            var result = new List<Grpc_Person>();
+            foreach (var item in list)
+            {
+                result.Add(FromPerson(item));
+            }
+            return result;
+        }
+
+        public static List<Person> FromGrpc_PersonList(List<Grpc_Person> list)
+        {
+            var result = new List<Person>();
+            foreach (var item in list)
+            {
+                result.Add(FromGrpc_Person(item));
+            }
+            return result;
+        }
+
+        public static Grpc_Person FromPerson(Person item)
+        {
+            var result = new Grpc_Person();
+            result.Id = item.Id;
+            result.FirstName = item.FirstName;
+            result.LastName = item.LastName;
+            result.Bio = item.Bio;
+            result.PhotoUrl = item.PhotoUrl;
+            return result;
+        }
+
+
+        public static Person FromGrpc_Person(Grpc_Person item)
+        {
+            var result = new Person();
+            result.Id = item.Id;
+            result.FirstName = item.FirstName;
+            result.LastName = item.LastName;
+            result.Bio = item.Bio;
+            result.PhotoUrl = item.PhotoUrl;
+            return result;
+        }
+
+    }
+}
 ```
 
