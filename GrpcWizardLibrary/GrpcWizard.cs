@@ -404,21 +404,21 @@ namespace GrpcWizardLibrary
             Console.WriteLine(startupSb.ToString());
 
             var programSb = new StringBuilder();
-            programSb.AppendLine($"using {ModelsNameSpace}" + ";");
-            programSb.AppendLine("using Grpc.Net.Client;");
-            programSb.AppendLine("using Grpc.Net.Client.Web;");
+            programSb.AppendLine($"    using {ModelsNameSpace}" + ";");
+            programSb.AppendLine("    using Grpc.Net.Client;");
+            programSb.AppendLine("    using Grpc.Net.Client.Web;");
             programSb.AppendLine();
-            programSb.AppendLine("public static async Task Main(string[] args)");
-            programSb.AppendLine("{");
-            programSb.AppendLine("    builder.Services.AddSingleton(services =>");
+            programSb.AppendLine("    public static async Task Main(string[] args)");
             programSb.AppendLine("    {");
-            programSb.AppendLine("        var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));");
-            programSb.AppendLine("        var baseUri = builder.HostEnvironment.BaseAddress;");
-            programSb.AppendLine("        var channel = GrpcChannel.ForAddress(baseUri, new GrpcChannelOptions { HttpClient = httpClient });");
-            programSb.AppendLine($"        return new Grpc_{ServiceName}.Grpc_{ServiceName}Client(channel);");
-            programSb.AppendLine("    });");
-            programSb.AppendLine($"    builder.Services.AddScoped<Grpc{ServiceName}Client>();");
-            programSb.AppendLine("}");
+            programSb.AppendLine("        builder.Services.AddSingleton(services =>");
+            programSb.AppendLine("        {");
+            programSb.AppendLine("            var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));");
+            programSb.AppendLine("            var baseUri = builder.HostEnvironment.BaseAddress;");
+            programSb.AppendLine("            var channel = GrpcChannel.ForAddress(baseUri, new GrpcChannelOptions { HttpClient = httpClient });");
+            programSb.AppendLine($"            return new Grpc_{ServiceName}.Grpc_{ServiceName}Client(channel);");
+            programSb.AppendLine("        });");
+            programSb.AppendLine($"        builder.Services.AddScoped<Grpc{ServiceName}Client>();");
+            programSb.AppendLine("    }");
 
             Console.WriteLine();
             Console.WriteLine("Program.cs:");
@@ -437,6 +437,7 @@ namespace GrpcWizardLibrary
             readmeSb.Append(sharedSb);
             readmeSb.AppendLine();
             readmeSb.AppendLine($"2) Add the {ProtoFileName} file to the Shared project.");
+            readmeSb.AppendLine();
             readmeSb.AppendLine("3) Add the following converter files to the Shared project:");
             readmeSb.AppendLine();
             foreach (var filename in converterFiles)
