@@ -58,10 +58,15 @@ namespace GrpcGenerator
     public class Person
     {
         public int Id { get; set; }
+        public long LongValue { get; set; }
+        public UInt32 UInt32Value { get; set; }
+        public bool IsValid { get; set; }
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
         public string Bio { get; set; } = "";
         public string PhotoUrl { get; set; } = "";
+        public DateTime DateOfBirth { get; set; }
+        public byte[] MyByteArray { get; set; }
     }
 
     public class GetAllPeopleRequest

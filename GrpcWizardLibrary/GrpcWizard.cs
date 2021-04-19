@@ -41,8 +41,8 @@ namespace GrpcWizardLibrary
             {
                 // Is this labeled as a GrpcService?
                 attr = (from a in Attribute.GetCustomAttributes(iface)
-                            where a.GetType().Name == "GrpcServiceAttribute"
-                            select a).FirstOrDefault();
+                        where a.GetType().Name == "GrpcServiceAttribute"
+                        select a).FirstOrDefault();
                 if (attr != null)
                 {
                     // this interface is the GrpcService interface
@@ -78,7 +78,7 @@ namespace GrpcWizardLibrary
                 var returnType = method.ReturnParameter.ParameterType.GenericTypeArguments[0].Name;
 
                 string newline = $"    rpc {method.Name} (Grpc_{inputParam.ParameterType.Name}) returns (Grpc_{returnType});";
-                
+
                 // Add parameter types
                 if (!messageTypes.Contains(inputParam.ParameterType))
                 {
@@ -100,9 +100,10 @@ namespace GrpcWizardLibrary
             var SharedOutputFolder = $"{OutputFolder}\\Shared\\";
             if (!Directory.Exists(SharedOutputFolder)) Directory.CreateDirectory(SharedOutputFolder);
 
-
             protoSb.AppendLine("}");
-            
+
+                      
+
             foreach (Type t in messageTypes)
             {
                 protoSb.AppendLine("");
@@ -112,10 +113,26 @@ namespace GrpcWizardLibrary
                 foreach (var prop in props)
                 {
                     string propertyType = "";
-                    
+
                     if (prop.PropertyType.Name == "Int32")
                     {
                         propertyType = "int32";
+                    }
+                    else if (prop.PropertyType.Name == "Int64")
+                    {
+                        propertyType = "int64";
+                    }
+                    else if (prop.PropertyType.Name == "UInt32")
+                    {
+                        propertyType = "uint32";
+                    }
+                    else if (prop.PropertyType.Name == "UInt64")
+                    {
+                        propertyType = "uint64";
+                    }
+                    else if (prop.PropertyType.Name == "Boolean")
+                    {
+                        propertyType = "bool";
                     }
                     else if (prop.PropertyType.Name == "Single")
                     {
@@ -129,18 +146,38 @@ namespace GrpcWizardLibrary
                     {
                         propertyType = "string";
                     }
+                    else if (prop.PropertyType.Name == "DateTime")
+                    {
+                        propertyType = "int64";
+                    }
+                    else if (prop.PropertyType.Name == "Byte[]")
+                    {
+                        propertyType = "bytes";
+                    }
                     else if (prop.PropertyType.Name == "List`1")
                     {
                         var listType = prop.PropertyType.GenericTypeArguments[0].Name;
 
                         if (listType == "Int32")
                             propertyType = "repeated int32";
+                        else if (listType == "Int64")
+                            propertyType = "repeated int64";
+                        else if (listType == "UInt32")
+                            propertyType = "repeated uint32";
+                        else if (listType == "UInt64")
+                            propertyType = "repeated uint64";
+                        else if (listType == "Boolean")
+                            propertyType = "repeated bool";
                         else if (listType == "String")
                             propertyType = "repeated string";
+                        else if (listType == "DateTime")
+                            propertyType = "repeated int64";    // Dates are converted to long values
                         else if (listType == "Single")
                             propertyType = "repeated float";
                         else if (listType == "Double")
                             propertyType = "repeated double";
+                        else if (listType == "Byte[]")
+                            propertyType = "repeated bytes";
                         else
                             propertyType = "repeated Grpc_" + listType;
                     }
@@ -148,8 +185,14 @@ namespace GrpcWizardLibrary
                     {
                         return $"Unknown Property Type: {prop.PropertyType.Name}";
                     }
-                    
-                    protoSb.AppendLine($"    {propertyType} {CamelCase(prop.Name)} = {ordinal};");
+                    if (prop.PropertyType.Name == "DateTime")
+                    {
+                        protoSb.AppendLine($"    {propertyType} dt_{prop.Name} = {ordinal};");
+                    }
+                    else
+                    {
+                        protoSb.AppendLine($"    {propertyType} {CamelCase(prop.Name)} = {ordinal};");
+                    }
                     ordinal++;
                 }
                 protoSb.AppendLine("}");
@@ -173,6 +216,7 @@ namespace GrpcWizardLibrary
                 converterSb.AppendLine("using System.Linq;");
                 converterSb.AppendLine("using System.Text;");
                 converterSb.AppendLine("using System.Threading.Tasks;");
+                converterSb.AppendLine("using Google.Protobuf;");
                 converterSb.AppendLine($"using {ModelsNameSpace};");
                 converterSb.AppendLine("");
                 converterSb.AppendLine($"namespace {ModelsNameSpace}");
@@ -198,7 +242,7 @@ namespace GrpcWizardLibrary
                 converterSb.AppendLine("            }");
                 converterSb.AppendLine("            return result;");
                 converterSb.AppendLine("        }");
-                converterSb.AppendLine(""); 
+                converterSb.AppendLine("");
                 converterSb.AppendLine($"        public static Grpc_{t.Name} From{t.Name}({t.Name} item)");
                 converterSb.AppendLine("        {");
                 converterSb.AppendLine($"            var result = new Grpc_{t.Name}();");
@@ -212,9 +256,21 @@ namespace GrpcWizardLibrary
                         converterSb.AppendLine($"            var {prop.Name.ToLower()} = {listType}Converter.From{listType}List(item.{prop.Name}.ToList());");
                         converterSb.AppendLine($"            result.{prop.Name}.AddRange({prop.Name.ToLower()});");
                     }
-                    else 
+                    else
                     {
-                        converterSb.AppendLine($"            result.{prop.Name} = item.{prop.Name};");
+                        if (prop.PropertyType.Name == "DateTime")
+                        {
+                            converterSb.AppendLine($"            result.Dt{prop.Name} = item.{prop.Name}.ToBinary();");
+                        }
+                        else if (prop.PropertyType.Name == "Byte[]")
+                        {
+                            converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                            converterSb.AppendLine($"                result.{prop.Name} = ByteString.CopyFrom(item.{prop.Name});");
+                        }
+                        else
+                        {
+                            converterSb.AppendLine($"            result.{prop.Name} = item.{prop.Name};");
+                        }
                     }
                 }
 
@@ -237,7 +293,27 @@ namespace GrpcWizardLibrary
                     }
                     else
                     {
-                        converterSb.AppendLine($"            result.{prop.Name} = item.{prop.Name};");
+                        if (prop.PropertyType.Name == "DateTime")
+                        {
+                            converterSb.AppendLine($"            result.{prop.Name} = System.DateTime.FromBinary(item.Dt{prop.Name});");
+                        }
+                        else if (prop.PropertyType.Name == "Byte[]")
+                        {
+                            converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                            converterSb.AppendLine($"                result.{prop.Name} = item.{prop.Name}.ToByteArray();");
+                        }
+                        else
+                        {
+                            if (!prop.PropertyType.IsValueType)
+                            {
+                                converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                                converterSb.AppendLine($"                result.{prop.Name} = item.{prop.Name};");
+                            }
+                            else // value types don't need a null check
+                            {
+                                converterSb.AppendLine($"            result.{prop.Name} = item.{prop.Name};");
+                            }
+                        }
                     }
                 }
 
@@ -283,7 +359,7 @@ namespace GrpcWizardLibrary
                 var parameters = method.GetParameters();
                 var inputParam = parameters[0];
                 var returnType = method.ReturnParameter.ParameterType.GenericTypeArguments[0].Name;
-                
+
                 serviceSb.AppendLine($"        public override async Task<Grpc_{returnType}> {method.Name}(Grpc_{inputParam.ParameterType.Name} request, ServerCallContext context)");
                 serviceSb.AppendLine("        {");
                 serviceSb.AppendLine($"            var baseRequest = {inputParam.ParameterType.Name}Converter.FromGrpc_{inputParam.ParameterType.Name}(request);");
@@ -293,7 +369,7 @@ namespace GrpcWizardLibrary
                 serviceSb.AppendLine("        }");
                 serviceSb.AppendLine("");
             }
-            
+
             serviceSb.AppendLine("    }");
             serviceSb.AppendLine("}");
 
@@ -322,7 +398,7 @@ namespace GrpcWizardLibrary
                 var parameters = method.GetParameters();
                 var inputParam = parameters[0];
                 var returnType = method.ReturnParameter.ParameterType.GenericTypeArguments[0].Name;
-                
+
                 clientServiceSb.AppendLine($"    public async Task<{returnType}> {method.Name}Async({inputParam.ParameterType.Name} request)");
                 clientServiceSb.AppendLine("    {");
                 clientServiceSb.AppendLine($"        var {CamelCase(inputParam.ParameterType.Name)} = {inputParam.ParameterType.Name}Converter.From{inputParam.ParameterType.Name}(request);");
