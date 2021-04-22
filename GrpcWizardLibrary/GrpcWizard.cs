@@ -102,7 +102,7 @@ namespace GrpcWizardLibrary
 
             protoSb.AppendLine("}");
 
-                      
+
 
             foreach (Type t in messageTypes)
             {
@@ -152,10 +152,42 @@ namespace GrpcWizardLibrary
                     }
                     else if (prop.PropertyType.Name == "Byte[]")
                     {
+                        // byte array translates to bytes
                         propertyType = "bytes";
+                    }
+                    else if (prop.PropertyType.Name.EndsWith("[]"))
+                    {
+                        // this is an array
+                        var listType = prop.PropertyType.Name.Substring(0, prop.PropertyType.Name.Length - 2);
+
+                        if (listType == "Int32")
+                            propertyType = "repeated int32";
+                        else if (listType == "Int64")
+                            propertyType = "repeated int64";
+                        else if (listType == "UInt32")
+                            propertyType = "repeated uint32";
+                        else if (listType == "UInt64")
+                            propertyType = "repeated uint64";
+                        else if (listType == "Boolean")
+                            propertyType = "repeated bool";
+                        else if (listType == "String")
+                            propertyType = "repeated string";
+                        else if (listType == "DateTime")
+                            propertyType = "repeated int64";    // Dates are converted to long values
+                        else if (listType == "Single")
+                            propertyType = "repeated float";
+                        else if (listType == "Double")
+                            propertyType = "repeated double";
+                        else if (listType == "Byte[]")
+                            propertyType = "repeated bytes";
+                        else
+                            propertyType = "repeated Grpc_" + listType;
+
                     }
                     else if (prop.PropertyType.Name == "List`1")
                     {
+                        // this is a List<T>
+
                         var listType = prop.PropertyType.GenericTypeArguments[0].Name;
 
                         if (listType == "Int32")
@@ -185,6 +217,8 @@ namespace GrpcWizardLibrary
                     {
                         return $"Unknown Property Type: {prop.PropertyType.Name}";
                     }
+
+                    // DateTime?
                     if (prop.PropertyType.Name == "DateTime")
                     {
                         protoSb.AppendLine($"    {propertyType} dt_{prop.Name} = {ordinal};");
@@ -193,6 +227,7 @@ namespace GrpcWizardLibrary
                     {
                         protoSb.AppendLine($"    {propertyType} {CamelCase(prop.Name)} = {ordinal};");
                     }
+
                     ordinal++;
                 }
                 protoSb.AppendLine("}");
@@ -253,19 +288,50 @@ namespace GrpcWizardLibrary
                     if (prop.PropertyType.Name == "List`1")
                     {
                         var listType = prop.PropertyType.GenericTypeArguments[0].Name;
-                        converterSb.AppendLine($"            var {prop.Name.ToLower()} = {listType}Converter.From{listType}List(item.{prop.Name}.ToList());");
-                        converterSb.AppendLine($"            result.{prop.Name}.AddRange({prop.Name.ToLower()});");
+                        if (listType == "Int32" || listType == "Int64" || listType == "UInt32"
+                            || listType == "UInt64" || listType == "Boolean" || listType == "Single"
+                            || listType == "Double")
+                        {
+                            converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                            converterSb.AppendLine($"                result.{prop.Name}.AddRange(item.{prop.Name});");
+                        }
+                        else if (listType == "String")
+                        {
+                            converterSb.AppendLine($"            if (!string.IsNullOrWhiteSpace(item.{prop.Name})");
+                            converterSb.AppendLine($"                result.{prop.Name}.AddRange(item.{prop.Name});");
+                        }
+                        // TODO: Handle dates and byte arrays in a list
+                        //else if (listType == "Byte[]")
+                        //{
+
+                        //}
+                        //else if (listType == "DateTime")
+                        //{
+
+                        //}
+                        else
+                        {
+                            converterSb.AppendLine($"            var {prop.Name.ToLower()} = {listType}Converter.From{listType}List(item.{prop.Name}.ToList());");
+                            converterSb.AppendLine($"            result.{prop.Name}.AddRange({prop.Name.ToLower()});");
+                        }
+
+                    }
+                    else if (prop.PropertyType.Name == "Byte[]")
+                    {
+                        converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                        converterSb.AppendLine($"                result.{prop.Name} = ByteString.CopyFrom(item.{prop.Name});");
+                    }
+                    else if (prop.PropertyType.Name.EndsWith("[]"))
+                    {
+                        var listType = prop.PropertyType.Name.Substring(0, prop.PropertyType.Name.Length - 2);
+                        converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                        converterSb.AppendLine($"                result.{prop.Name}.AddRange(item.{prop.Name});");
                     }
                     else
                     {
                         if (prop.PropertyType.Name == "DateTime")
                         {
                             converterSb.AppendLine($"            result.Dt{prop.Name} = item.{prop.Name}.ToBinary();");
-                        }
-                        else if (prop.PropertyType.Name == "Byte[]")
-                        {
-                            converterSb.AppendLine($"            if (item.{prop.Name} != null)");
-                            converterSb.AppendLine($"                result.{prop.Name} = ByteString.CopyFrom(item.{prop.Name});");
                         }
                         else
                         {
@@ -301,6 +367,11 @@ namespace GrpcWizardLibrary
                         {
                             converterSb.AppendLine($"            if (item.{prop.Name} != null)");
                             converterSb.AppendLine($"                result.{prop.Name} = item.{prop.Name}.ToByteArray();");
+                        }
+                        else if (prop.PropertyType.Name.EndsWith("[]"))
+                        {
+                            converterSb.AppendLine($"            if (item.{prop.Name} != null)");
+                            converterSb.AppendLine($"                result.{prop.Name} = item.{prop.Name}.ToArray();");
                         }
                         else
                         {
@@ -339,9 +410,9 @@ namespace GrpcWizardLibrary
             serviceSb.AppendLine("using System.Collections.Generic;");
             serviceSb.AppendLine("using System.Linq;");
             serviceSb.AppendLine("using System.Threading.Tasks;");
-            serviceSb.AppendLine($"using {ServiceType.Namespace};");
+            serviceSb.AppendLine($"using {ModelsNameSpace};");
             serviceSb.AppendLine("");
-            serviceSb.AppendLine($"namespace {ModelsNameSpace}");
+            serviceSb.AppendLine($"namespace {ServiceType.Namespace}");
             serviceSb.AppendLine("{");
             serviceSb.AppendLine($"    public class Grpc_{ServiceName}Service : Grpc_{ServiceName}.Grpc_{ServiceName}Base");
             serviceSb.AppendLine("    {");
@@ -402,8 +473,8 @@ namespace GrpcWizardLibrary
                 clientServiceSb.AppendLine($"    public async Task<{returnType}> {method.Name}Async({inputParam.ParameterType.Name} request)");
                 clientServiceSb.AppendLine("    {");
                 clientServiceSb.AppendLine($"        var {CamelCase(inputParam.ParameterType.Name)} = {inputParam.ParameterType.Name}Converter.From{inputParam.ParameterType.Name}(request);");
-                clientServiceSb.AppendLine($"        var {CamelCase(returnType)} = await grpc_{ServiceName}Client.{method.Name}Async({CamelCase(inputParam.ParameterType.Name)});");
-                clientServiceSb.AppendLine($"        return {returnType}Converter.FromGrpc_{returnType}({CamelCase(returnType)});");
+                clientServiceSb.AppendLine($"        var result = await grpc_{ServiceName}Client.{method.Name}Async({CamelCase(inputParam.ParameterType.Name)});");
+                clientServiceSb.AppendLine($"        return {returnType}Converter.FromGrpc_{returnType}(result);");
                 clientServiceSb.AppendLine("    }");
                 clientServiceSb.AppendLine("");
             }

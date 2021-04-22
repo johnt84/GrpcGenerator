@@ -61,6 +61,9 @@ namespace GrpcGenerator
         public long LongValue { get; set; }
         public UInt32 UInt32Value { get; set; }
         public bool IsValid { get; set; }
+        public string[] StringArray { get; set; }
+        public int[] IntArray { get; set; }
+        public List<double> DoubleList { get; set; }
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
         public string Bio { get; set; } = "";
@@ -88,6 +91,7 @@ namespace GrpcGenerator
     {
         Task<PeopleReply> GetAll(GetAllPeopleRequest request);
         Task<Person> GetPersonById(GetPersonByIdRequest request);
+        Task<Person> TestInputsAndOutputs(Person request);
     }
 
     [GrpcService]
@@ -101,6 +105,16 @@ namespace GrpcGenerator
             people.Add(new Person { Id = 2, FirstName = "Ben", LastName = "Drinkin" });
             people.Add(new Person { Id = 3, FirstName = "Amanda", LastName = "Reckonwith" });
         }
+
+        public Task<Person> TestInputsAndOutputs(Person request)
+        {
+            var reply = new Person();
+
+            // test inputs here
+
+            return Task.FromResult(reply);
+        }
+
         public Task<PeopleReply> GetAll(GetAllPeopleRequest request)
         {
             var reply = new PeopleReply();
